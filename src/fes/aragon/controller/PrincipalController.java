@@ -31,6 +31,7 @@ private Button btnBurbuja;
 @FXML
 private Button btnListaNueva;
 @FXML
+/*---------------------------------------------------------------------*/
 void metodoBurbuja(ActionEvent event) {
 this.btnListaNueva.setDisable(true);
 
@@ -39,6 +40,7 @@ exec.submit(animateSortTask);
 
 }
 @FXML
+//*************************************************************************
 void metodoListaNueva(ActionEvent event) {
 bacGrafica.getData().clear();
 
@@ -47,44 +49,41 @@ series = generarAleatoriosEnteros(numeroDatos);
 bacGrafica.getData().add(series);
 
 }
+
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 private Task<Void> burbujaTask(Series<String, Number> series) {
 
 return new Task<Void>() {
 @Override
-protected Void call() throws Exception {
-ObservableList<Data<String, Number>> data = series.getData();
-for (int i = data.size() - 1; i >= 0; i--) {
-for (int j = 0; j < i; j++) {
-primero = data.get(j);
-segundo = data.get(j + 1);
-Platform.runLater(() -> {
-primero.getNode().setStyle("-fx-background-color:red ;");
-
-segundo.getNode().setStyle("-fx-background-color:blue ;");
-
-});
-Thread.sleep(tiempoRetardo);
-if (primero.getYValue().doubleValue() >=segundo.getYValue().doubleValue()) {
-
-CountDownLatch latch = new CountDownLatch(1);
-Platform.runLater(() -> {Animation swap =createSwapAnimation(primero, segundo);
-swap.setOnFinished(e -> latch.countDown());
-swap.play();
-});
-latch.await();
-}
-Thread.sleep(tiempoRetardo);
-Platform.runLater(() -> {
-primero.getNode().setStyle("-fx-background-color:blue ;");
-
-segundo.getNode().setStyle("-fx-background-color:red ;");
-
-});
-}
-}
-btnListaNueva.setDisable(false);
-return null;
-}
+	protected Void call() throws Exception {
+	ObservableList<Data<String, Number>> data = series.getData();
+	for (int i = data.size() - 1; i >= 0; i--) {
+		for (int j = 0; j < i; j++) {
+			primero = data.get(j);
+			segundo = data.get(j + 1);
+				Platform.runLater(() -> {
+					primero.getNode().setStyle("-fx-background-color:red ;");
+					segundo.getNode().setStyle("-fx-background-color:blue ;");
+					});
+				Thread.sleep(tiempoRetardo);
+				if (primero.getYValue().doubleValue() >=segundo.getYValue().doubleValue()) {
+					CountDownLatch latch = new CountDownLatch(1);
+					Platform.runLater(() -> {Animation swap =createSwapAnimation(primero, segundo);
+					swap.setOnFinished(e -> latch.countDown());
+					swap.play();
+					});
+					latch.await();
+				}
+				Thread.sleep(tiempoRetardo);
+				Platform.runLater(() -> {
+					primero.getNode().setStyle("-fx-background-color:blue ;");
+					segundo.getNode().setStyle("-fx-background-color:red ;");
+				});
+		}
+	}
+	btnListaNueva.setDisable(false);
+	return null;
+	}
 };
 }
 @Override
