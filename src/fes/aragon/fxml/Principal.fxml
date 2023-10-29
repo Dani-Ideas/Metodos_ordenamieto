@@ -10,6 +10,7 @@
 
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="434.0" prefWidth="891.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fes.aragon.controller.PrincipalController">
 	<children>
+      <Button fx:id="btnQuickSort" layoutX="257.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoQuickSort" text="Quick Sort" />
 		<Label layoutX="139.0" layoutY="14.0" text="Métodos de Ordenación">
 			<font>
 				<Font size="30.0" />
@@ -18,9 +19,8 @@
 		
 		<Button fx:id="btnBurbuja" layoutX="40.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoBurbuja" text="Burbuja" />
 		<Button fx:id="btnListaNueva" layoutX="752.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoListaNueva" text="Lista Nueva" />
-      	<Button fx:id="btnInsersionD" layoutX="139.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoInsersionD" text="Insersion D" />
+      	<Button fx:id="btnInsersionD" layoutX="139.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoInsersionD" text="Insersion" />
      	<Button fx:id="btnselecion" layoutX="631.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoSelecion" text="Selecion" />
-     	<Button fx:id="btnInsersionB" layoutX="256.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoInsersionB" text="Insersion B" />
       	<Button fx:id="btnMescla" layoutX="384.0" layoutY="65.0" mnemonicParsing="false" onAction="#metodoMescla" text="Mescla" />
       		
 		<BarChart fx:id="bacGrafica" layoutX="26.0" layoutY="98.0" prefHeight="288.0" prefWidth="840.0">

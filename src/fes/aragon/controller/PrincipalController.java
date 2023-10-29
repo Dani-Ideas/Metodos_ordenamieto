@@ -37,8 +37,8 @@ public class PrincipalController implements Initializable{
 	private Button btnListaNueva;
 	@FXML
 	private Button btnInsersionD;
-    @FXML
-    private Button btnInsersionB;
+	@FXML
+    private Button btnQuickSort;
 
     
     
@@ -57,21 +57,9 @@ public class PrincipalController implements Initializable{
     void metodoSelecion(ActionEvent event) {
     	this.btnListaNueva.setDisable(true);
 		ObservableList<Data<String, Number>> data = bacGrafica.getData().get(0).getData();
-		Task<Void> animateSortTask = selectionTask(data.subList(0, data.size()/2));
+		Task<Void> animateSortTask = selectionTask(data.subList(data.size()/2, data.size()));
 		exec.submit(animateSortTask);
-		
     }
-    @FXML
-/*---------------------------------------------------------------------*/
-    void metodoInsersionB(ActionEvent event) {
-    	this.btnListaNueva.setDisable(true);
-        ObservableList<Data<String, Number>> data = bacGrafica.getData().get(0).getData();
-        
-        Task<Void> animateSortTask = insercionBinariaTask(data.subList(0, data.size() / 2));
-        exec.submit(animateSortTask);
-       
-    }
-    
     
 	@FXML
 /*---------------------------------------------------------------------*/
@@ -90,13 +78,17 @@ public class PrincipalController implements Initializable{
 		ObservableList<Data<String, Number>> data = bacGrafica.getData().get(0).getData();
 		Task<Void> animateSortTask = burbujaTask(data.subList(0, data.size()/2));
 		exec.submit(animateSortTask);
-		
-		//animateSortTask = burbujaTask(data.subList(data.size()/2,data.size()));
-		//exec.submit(animateSortTask);
 	}
 
-
-
+@FXML
+//*************************************************************************
+	void metodoQuickSort(ActionEvent event) {
+		this.btnListaNueva.setDisable(true);
+		ObservableList<Data<String, Number>> data = bacGrafica.getData().get(0).getData();
+		Task<Void> animateSortTask = quickSortTask(data.subList(data.size()/2, data.size()));
+    	exec.submit(animateSortTask);
+    
+	}
 
 @FXML
 //*************************************************************************
@@ -152,31 +144,43 @@ public class PrincipalController implements Initializable{
 	private Task<Void> insercionDirectaTask(List<Data<String, Number>> data) {
 	    return new Task<Void>() {
 	        Data<String, Number> actual = null;
-	        Data<String, Number> temp= null;
+	        Data<String, Number> temp = null;
 	        int anterior;
+
 	        @Override
 	        protected Void call() throws Exception {
-	            for (int i = 1; i < data.size()-1; i++) {
+	            for (int i = 1; i < data.size(); i++) {
 	                actual = data.get(i);
 	                anterior = i - 1;
+
+	                // inicio de la animación
 	                Platform.runLater(() -> {
 	                    actual.getNode().setStyle("-fx-background-color:red ;");
 	                });
 	                Thread.sleep(tiempoRetardo);
+
 	                while (anterior >= 0 && data.get(anterior).getYValue().doubleValue() > actual.getYValue().doubleValue()) {
+
 	                    temp = data.get(anterior);
-	                    
-	                    // Mueve los elementos mayores para hacer espacio para actual
-	                    data.set(anterior+1, data.get(anterior));
-	                    
-	                    Platform.runLater(() -> {Animation swap = createSwapAnimation(temp, data.get(anterior + 1));
-	                    	swap.setOnFinished(e -> actual.getNode().setStyle("-fx-background-color:blue ;"));
-	                    	swap.play();
+
+	                    final CountDownLatch latch = new CountDownLatch(1);
+
+	                    Platform.runLater(() -> {
+	                        Animation swap = createSwapAnimation(temp, data.get(anterior + 1));
+	                        swap.setOnFinished(e -> latch.countDown()); // Contador reducido al final de la animación
+	                        swap.play();
 	                    });
+	                    latch.await(); // Esperar a que la animación termine antes de continuar
+	                    Thread.sleep(tiempoRetardo);
+	                    Platform.runLater(() -> {
+	                        temp.getNode().setStyle("-fx-background-color:blue ;");
+	                        data.get(anterior + 1).getNode().setStyle("-fx-background-color:red ;");
+	                    });
+
+	                    // Intercambiar actual con anterior + 1
+	                    //data.set(anterior + 1, actual);
 	                    anterior--;
 	                }
-	                // Coloca actual en la posición correcta
-	                data.set(anterior + 1, actual);
 
 	                Platform.runLater(() -> {
 	                    actual.getNode().setStyle("-fx-background-color:blue ;");
@@ -188,55 +192,6 @@ public class PrincipalController implements Initializable{
 	    };
 	}
 	
-	//tiene varios problemas al mometo de graficarlo,  Creo yo que son las animaciones , estube investigando y se otra otra lib, per no se porque bubuja funciona perfecto
-	private Task<Void> insercionBinariaTask(List<Data<String, Number>> data) {
-	    return new Task<Void>() {
-	        Data<String, Number> actual = null;
-	        int j,k;
-	        @Override
-	        protected Void call() throws Exception {
-	            for (int i = 1; i < data.size(); i++) {
-	                actual = data.get(i);
-	                j = i - 1;
-	                Platform.runLater(() -> {
-	                    actual.getNode().setStyle("-fx-background-color:red ;");
-	                });
-	                Thread.sleep(tiempoRetardo);
-
-	                // Realiza una búsqueda binaria para encontrar la posición correcta
-	                int low = 0;
-	                int high = j;
-	                while (low <= high) {
-	                    int mid = (low + high) / 2;
-	                    if (actual.getYValue().doubleValue() < data.get(mid).getYValue().doubleValue()) {
-	                        high = mid - 1;
-	                    } else {
-	                        low = mid + 1;
-	                    }
-	                }
-
-	                // Mueve los elementos mayores para hacer espacio
-	                for (k = i - 1; k >= low; k--) {
-	                    data.set(k + 1, data.get(k));
-	                    Platform.runLater(() -> {Animation transition = createSwapAnimation(data.get(k), data.get(k + 1));
-	                        transition.play();
-	                    });
-	                    Thread.sleep(tiempoRetardo);
-	                }
-
-	                // Coloca actual en la posición correcta
-	                data.set(low, actual);
-
-	                Platform.runLater(() -> {
-	                    actual.getNode().setStyle("-fx-background-color:blue ;");
-	                });
-
-	                Thread.sleep(tiempoRetardo);
-	            }
-	            return null;
-	        }
-	    };
-	}
 	/*
 	 * Nota esta funcion es propia, creo que en una clase se hizo con el mike pero llege tarde
 	 * hay un extracto del metodo del mike reuperado de una captura de pantalla que realice en clase
@@ -266,61 +221,34 @@ public class PrincipalController implements Initializable{
 	                    }
 	                }
 	                if (i != min) {
-	                    Data<String, Number> temp = data.get(i);
-	                    data.set(i, data.get(min));
-	                    data.set(min, temp);
+	                    //Data<String, Number> temp = data.get(i);
+	                    
+	                    //data.set(i, data.get(min));
+	                    //data.set(min, temp);
 	                    primero = data.get(i);
 	                    segundo = data.get(min);
+	                    
+	                    CountDownLatch latch= new CountDownLatch(1);
+	                    
 	                    Platform.runLater(() -> {
-	                        Animation transition = createSwapAnimation(primero, segundo);
-	                        transition.setOnFinished(e -> {
-	                            primero.getNode().setStyle("-fx-background-color:blue ;");
-	                            segundo.getNode().setStyle("-fx-background-color:red ;");
-	                        });
-	                        transition.play();
+	                        Animation swap = createSwapAnimation(primero, segundo);
+	                        swap.setOnFinished(e-> latch.countDown());
+	                        swap.play();
+	                    });
+	                    latch.await();
+	                    Thread.sleep(tiempoRetardo);
+	                    Platform.runLater(()->{
+	                    	primero.getNode().setStyle("-fx-background-color:blue ;");
+	                        segundo.getNode().setStyle("-fx-background-color:red ;");
 	                    });
 	                }
-	                Thread.sleep(tiempoRetardo);
 	            }
+	            btnListaNueva.setDisable(false);
 	            return null;
 	        }
 	    };
 	}
 	
-	/*private Task<Void> selectionTask(List<Data<String, Number>> data){
-		return new Task <Void>() {
-			Data<String, Number> primero = null;
-			Data<String, Number> segundo = null;
-			@Override
-			protected Void call() throws Exception{
-				//ObservableList<Data<String,Number>> data= series.getData();
-				int min=0;
-				for (int i=0;i<data.size();i++) {
-					min=i;
-					for(int j=i; j<data.size();j++) {
-						primero= data.get(j);
-						segundo= data.get(min);
-						Platform.runLater(() -> {
-							primero.getNode().setStyle("-fx-background-color:blue ;");
-							segundo.getNode().setStyle("-fx-background-color:red ;");
-						});
-						Thread.sleep(tiempoRetardo);
-						if (primero.getYValue().doubleValue()<segundo.getYValue().doubleValue()) {
-							min=j;
-						}
-					}
-					if (i!=min) {
-						primero= data.get(i);
-						segundo= data.get(min);
-						
-						CountDownLatch latch = new CountDownLatch(1);
-					}
-				}
-				return null;
-			}
-		};
-		
-	}*/
 	/*
 	 * 1 realizar una división 
 	 * 2 Luego, aplicar el algoritmo de mezcla a ambas mitades 
@@ -381,6 +309,12 @@ public class PrincipalController implements Initializable{
 	    while (j <= fin - inicio) {
 	        data.set(k++, aux.get(j++));
 	    }
+	}
+	
+
+	private Task<Void> quickSortTask(List<Data<String, Number>> subList) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	/*
@@ -467,3 +401,64 @@ public class PrincipalController implements Initializable{
 		return t;
 	});
 }
+/*
+@FXML
+//---------------------------------------------------------------------
+void metodoInsersionB(ActionEvent event) {
+	this.btnListaNueva.setDisable(true);
+    ObservableList<Data<String, Number>> data = bacGrafica.getData().get(0).getData();
+    
+    Task<Void> animateSortTask = insercionBinariaTask(data.subList(0, data.size() / 2));
+    exec.submit(animateSortTask);
+   
+}
+
+//tiene varios problemas al mometo de graficarlo,  Creo yo que son las animaciones , estube investigando y se otra otra lib, per no se porque bubuja funciona perfecto
+private Task<Void> insercionBinariaTask(List<Data<String, Number>> data) {
+    return new Task<Void>() {
+        Data<String, Number> actual = null;
+        int j,k;
+        @Override
+        protected Void call() throws Exception {
+            for (int i = 1; i < data.size(); i++) {
+                actual = data.get(i);
+                j = i - 1;
+                Platform.runLater(() -> {
+                    actual.getNode().setStyle("-fx-background-color:red ;");
+                });
+                Thread.sleep(tiempoRetardo);
+
+                // Realiza una búsqueda binaria para encontrar la posición correcta
+                int low = 0;
+                int high = j;
+                while (low <= high) {
+                    int mid = (low + high) / 2;
+                    if (actual.getYValue().doubleValue() < data.get(mid).getYValue().doubleValue()) {
+                        high = mid - 1;
+                    } else {
+                        low = mid + 1;
+                    }
+                }
+
+                // Mueve los elementos mayores para hacer espacio
+                for (k = i - 1; k >= low; k--) {
+                    data.set(k + 1, data.get(k));
+                    Platform.runLater(() -> {Animation transition = createSwapAnimation(data.get(k), data.get(k + 1));
+                        transition.play();
+                    });
+                    Thread.sleep(tiempoRetardo);
+                }
+
+                // Coloca actual en la posición correcta
+                data.set(low, actual);
+
+                Platform.runLater(() -> {
+                    actual.getNode().setStyle("-fx-background-color:blue ;");
+                });
+
+                Thread.sleep(tiempoRetardo);
+            }
+            return null;
+        }
+    };
+}*/
